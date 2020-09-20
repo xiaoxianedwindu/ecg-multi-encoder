@@ -208,8 +208,8 @@ y_test = y_test_temp
 
 target_train = y_test
 # Data & model configuration
-batch_size = 256
-no_epochs = 5
+batch_size = config.batch
+no_epochs = config.ae_epochs
 validation_split = 0.25
 verbosity = 1
 latent_dim = 2
@@ -505,19 +505,22 @@ data = (input_test, target_test)
 viz_latent_space_pca(encoder, data)
 viz_latent_space_pca(encoder_2, data)
 
-#x_vae_pred = vae.predict(input_test)
+target_train = np.array(pd.get_dummies(pd.DataFrame(target_train)))
+target_test = np.array(pd.get_dummies(pd.DataFrame(target_test)))
 
-#plot_some_signals(vae, data)
-
-#viz_decoded(encoder, decoder, data)
+(m, n) = target_train.shape
+target_train = target_train.reshape((m, 1, n ))
+(mvl, nvl) = target_test.shape
+target_test = target_test.reshape((mvl, 1, nvl))
 
 # Definition
-i_c     = Input(shape=(conv_shape[1],conv_shape[2]), name='encoder2_input')
-cx      = Dense(16, activation='relu')(i_c)
+i_c     = Input(shape=(conv_shape[1],conv_shape[2]), name='classifier_input')
+cx      = Reshape((conv_shape[1],))(i_c)
 co      = Dense(len(classes), activation='softmax')(cx)
 
 # Instantiate encoder
 classifier = Model(i_c, co, name='classifier')
 classifier.summary()
 classifier.compile(optimizer=keras.optimizers.Adam(), loss = tf.keras.losses.CategoricalCrossentropy())
-classifier.fit(encoder(X_test[0]), y_test[0], epochs = no_epochs, validation_split = validation_split)
+classifier.fit(encoder(input_train[0]), target_train[0], epochs = no_epochs, validation_split = validation_split)
+print_results_ae_multi(config, classifier, encoder(input_test), target_test.reshape(target_test.shape[0],target_test.shape[1]*target_test.shape[2]), classes)

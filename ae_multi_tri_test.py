@@ -33,8 +33,8 @@ input_test = ddio.load('dataset/testdata_tri.hdf5')
 target_test = ddio.load('dataset/testlabel_tri.hdf5')
 
 # Data & model configuration
-batch_size = 256
-no_epochs = 10
+batch_size = config.batch
+no_epochs = config.ae_epochs
 validation_split = 0.25
 verbosity = 1
 latent_dim = 2
@@ -196,7 +196,10 @@ ae.summary()
 # =================
 def viz_latent_space(encoder, data, title):
   input_data, target_data = data
+  target_data = (np.array(pd.DataFrame(target_data.reshape(target_data.shape[0], target_data.shape[2])).idxmax(axis=1)))
+
   print("tsne plot")
+  
 
   from sklearn.manifold import TSNE
   X_tsne = TSNE(n_components=2, random_state=1).fit_transform(encoder.predict(input_data).reshape(input_data.shape[0], 16))
@@ -204,7 +207,7 @@ def viz_latent_space(encoder, data, title):
   plt.figure(figsize=(8, 10))
   scatter = plt.scatter(X_tsne[:,0], X_tsne[:,1], c=target_data, label = classes)
   plt.legend(handles=scatter.legend_elements()[0], labels=classes)
-  plt.title("tsne")
+  plt.title(title)
   plt.show()
   plt.savefig('results/ae_multi-tri-'+str(title)+'tsne.png')
 
@@ -255,7 +258,7 @@ viz_latent_space_pca(encoder_2, data, "pca: subject encoder")
 plot_some_signals(ae, data)
 
 # Classifer Definition
-i_c     = Input(shape=(conv_shape[1],conv_shape[2]), name='encoder2_input')
+i_c     = Input(shape=(conv_shape[1],conv_shape[2]), name='classifier_input')
 cx      = Reshape((conv_shape[1],))(i_c)
 co      = Dense(len(classes), activation='softmax')(cx)
 

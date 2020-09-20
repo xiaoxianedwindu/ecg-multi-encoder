@@ -43,51 +43,11 @@ def train(config, X, y, Xval=None, yval=None):
             EarlyStopping(patience = config.patience, verbose=1),
             ReduceLROnPlateau(factor = 0.5, patience = 3, min_lr = 0.01, verbose=1),
             TensorBoard( log_dir='./logs', histogram_freq=0, write_graph = True, write_grads=False, write_images=True),
-            ModelCheckpoint('models/{}-latest.hdf5'.format(config.feature), monitor='val_loss', save_best_only=False, verbose=1, period=10)
+            ModelCheckpoint('models/{}-ae-latest.hdf5'.format(config.feature), monitor='val_loss', save_best_only=False, verbose=1, period=10)
             # , lr_decay_callback
     ]
-    print('=====shapes======')
-    print("Xe shape", Xe.shape)
-    print("y shape", y.shape)
-    print('=================')
-    '''
-    encoder.fit(Xe, Xe,
-            validation_data=(Xvale, Xvale),
-            epochs=config.epochs,
-            batch_size=config.batch,
-            callbacks=callbacks,
-            initial_epoch=initial_epoch)    
-    '''
-    #print_results(config, model, Xvale, yval, classes, )
-    '''
-    encoder = encoder_model(config)
-    encoder.fit(Xe, Xe,
-            validation_data=(Xvale, Xvale),
-            epochs=5,
-            batch_size=config.batch,
-            callbacks=callbacks,
-            initial_epoch=initial_epoch)
 
-    Xee = encoder.predict(Xe)
-    Xvalee = encoder.predict(Xvale)
-
-    #print(results.shape)
-    #print(Xvale[0])
-    #print(results[0])
-
-    decoder = decoder_model(config)
-    decoder.fit(Xee, Xee,
-            validation_data=(Xvalee, Xvalee),
-            epochs=5,
-            batch_size=config.batch,
-            callbacks=callbacks,
-            initial_epoch=initial_epoch)
-
-    Xde = decoder.predict(Xee)
-    Xvalde = decoder.predict(Xvalee)
-    '''
     ae = ae_model(config)
-
     ae.fit(Xe, Xe,
             validation_data=(Xvale, Xvale),
             #epochs=5,
@@ -112,8 +72,6 @@ def train(config, X, y, Xval=None, yval=None):
     plt.show()
     plt.savefig('results/ae_reconstructed_beats_'+str(config.epochs)+'.png')
 
-
-    #print_results(config, decoder, Xvalee, yval, classes, )
     model = ECG_model(config)
     model.fit(Xde, y,
             validation_data=(Xvalde, yval),
@@ -121,8 +79,8 @@ def train(config, X, y, Xval=None, yval=None):
             batch_size=config.batch,
             callbacks=callbacks,
             initial_epoch=initial_epoch)
-    print_results(config, model, Xvalde, yval, classes, "ae_"+str(config.epochs))
-    #return model
+    print_results(config, model, Xvalde, yval, classes, "ae-")
+
 
 
 def main(config):
@@ -133,7 +91,7 @@ def main(config):
         train(config, X, y, Xval, yval)
 
     else:
-        (X,y) = loaddata_nosplit_scaled(config.input_size, config.feature)
+        (X,y) = loaddata_nosplit_scaled_std(config.input_size, config.feature)
         train(config, X, y)
 
 

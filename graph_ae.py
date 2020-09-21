@@ -1,3 +1,7 @@
+"""
+Model data used with ae.py
+"""
+
 from __future__ import division, print_function
 from keras.models import Model
 from keras.layers import Input, Conv1D, Dense, add, Flatten, Dropout, Activation, BatchNormalization, Lambda, LeakyReLU, UpSampling1D, AveragePooling1D, Layer

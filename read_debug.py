@@ -1,3 +1,7 @@
+'''
+Debugging and experimental script for read.py
+
+'''
 from config import get_config
 import numpy as np
 from utils import *

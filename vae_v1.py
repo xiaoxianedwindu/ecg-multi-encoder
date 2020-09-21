@@ -1,5 +1,5 @@
 '''
-  Variational Autoencoder (VAE) with the Keras Functional API.
+  VAE-1 script
 '''
 
 import keras
@@ -35,9 +35,6 @@ def Conv1DTranspose(input_tensor, filters, kernel_size, strides=2, padding='same
     return x
 
 
-# Load MNIST dataset
-#(input_train, target_train), (input_test, target_test) = mnist.load_data()
-
 config = get_config()
 
 (X,y) = loaddata_nosplit_scaled_std(config.input_size, config.feature)
@@ -45,10 +42,6 @@ classes = ['A', 'E', 'j', 'L', 'N', 'P', 'R', 'V']#['N','V','/','A','F','~']#,'L
 Xe = np.expand_dims(X, axis=2)
 from sklearn.model_selection import train_test_split
 Xe, Xvale, y, yval = train_test_split(Xe, y, test_size=0.25, random_state=1)
-#(m, n) = y.shape
-#y = y.reshape((m, 1, n ))
-#(mvl, nvl) = yval.shape
-#yval = yval.reshape((mvl, 1, nvl))
 import pandas as pd
 y = np.array(pd.DataFrame(y).idxmax(axis=1))
 yval = np.array(pd.DataFrame(yval).idxmax(axis=1))
@@ -71,9 +64,6 @@ input_shape = (config.input_size, 1)
 input_train = input_train.astype('float32')
 input_test = input_test.astype('float32')
 
-# Normalize data
-#input_train = input_train / 255
-#input_test = input_test / 255
 
 # # =================
 # # Encoder
@@ -91,7 +81,6 @@ x       = BatchNormalization()(x)
 mu      = Dense(latent_dim, name='latent_mu')(x)
 sigma   = Dense(latent_dim, name='latent_sigma')(x)
 
-# Get Conv2D shape for Conv2DTranspose operation in decoder
 conv_shape = K.int_shape(cx)
 print(conv_shape)
 # Define sampling with reparameterization trick
@@ -120,8 +109,6 @@ x     = BatchNormalization()(x)
 x     = Reshape((conv_shape[1], conv_shape[2]))(x)
 cx    = Conv1DTranspose(x, filters=16, kernel_size=3, strides=2, padding='same', activation='relu')#(x)
 cx    = BatchNormalization()(cx)
-#cx    = Conv1DTranspose(cx, filters=8, kernel_size=3, strides=2, padding='same',  activation='relu', name = 'conv12d2')#(cx)
-#cx    = BatchNormalization()(cx)
 o     = Conv1DTranspose(cx, filters=num_channels, kernel_size=3, activation='sigmoid', padding='same', name='decoder_output')#(cx)
 
 # Instantiate decoder
@@ -169,37 +156,6 @@ def viz_latent_space(encoder, data):
   plt.xlabel('z - dim 1')
   plt.ylabel('z - dim 2')
   plt.legend(handles = scatter.legend_elements()[0],labels=  classes)
-  plt.show()
-
-def viz_decoded(encoder, decoder, data):
-  num_samples = 15
-  figure = np.zeros((img_width * num_samples, img_height * num_samples, num_channels))
-  grid_x = np.linspace(-4, 4, num_samples)
-  grid_y = np.linspace(-4, 4, num_samples)[::-1]
-  for i, yi in enumerate(grid_y):
-      for j, xi in enumerate(grid_x):
-          z_sample = np.array([[xi, yi]])
-          x_decoded = decoder.predict(z_sample)
-          digit = x_decoded[0].reshape(img_width, img_height, num_channels)
-          figure[i * img_width: (i + 1) * img_width,
-                  j * img_height: (j + 1) * img_height] = digit
-  plt.figure(figsize=(10, 10))
-  start_range = img_width // 2
-  end_range = num_samples * img_width + start_range + 1
-  pixel_range = np.arange(start_range, end_range, img_width)
-  sample_range_x = np.round(grid_x, 1)
-  sample_range_y = np.round(grid_y, 1)
-  plt.xticks(pixel_range, sample_range_x)
-  plt.yticks(pixel_range, sample_range_y)
-  plt.xlabel('z - dim 1')
-  plt.ylabel('z - dim 2')
-  # matplotlib.pyplot.imshow() needs a 2D array, or a 3D array with the third dimension being of shape 3 or 4!
-  # So reshape if necessary
-  fig_shape = np.shape(figure)
-  if fig_shape[2] == 1:
-    figure = figure.reshape((fig_shape[0], fig_shape[1]))
-  # Show image
-  plt.imshow(figure)
   plt.show()
 
 def plot_some_signals(vae, data):

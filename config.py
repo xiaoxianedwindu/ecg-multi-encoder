@@ -1,3 +1,8 @@
+'''
+    Parses of parameters and default settings
+
+'''
+
 #-*- coding: utf-8 -*-
 import argparse
 

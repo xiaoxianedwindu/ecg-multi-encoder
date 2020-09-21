@@ -1,3 +1,7 @@
+"""
+main ECG classifier model
+"""
+
 from __future__ import division, print_function
 from keras.models import Model
 from keras.layers import Input, Conv1D, Dense, add, Flatten, Dropout,MaxPooling1D, Activation, BatchNormalization, Lambda

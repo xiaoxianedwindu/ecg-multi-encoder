@@ -1,3 +1,7 @@
+"""
+Reads preprocessed data
+
+"""
 from config import get_config
 import numpy as np
 from utils import *

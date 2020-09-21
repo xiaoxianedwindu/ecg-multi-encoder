@@ -1,31 +1,5 @@
 """
-The data is provided by 
-https://physionet.org/physiobank/database/html/mitdbdir/mitdbdir.htm
-
-The recordings were digitized at 360 samples per second per channel with 11-bit resolution over a 10 mV range.
-Two or more cardiologists independently annotated each record; disagreements were resolved to obtain the computer-readable
-reference annotations for each beat (approximately 110,000 annotations in all) included with the database.
-
-    Code		Description
-    N		Normal beat (displayed as . by the PhysioBank ATM, LightWAVE, pschart, and psfd)
-    L		Left bundle branch block beat
-    R		Right bundle branch block beat
-    B		Bundle branch block beat (unspecified)
-    A		Atrial premature beat
-    a		Aberrated atrial premature beat
-    J		Nodal (junctional) premature beat
-    S		Supraventricular premature or ectopic beat (atrial or nodal)
-    V		Premature ventricular contraction
-    r		R-on-T premature ventricular contraction
-    F		Fusion of ventricular and normal beat
-    e		Atrial escape beat
-    j		Nodal (junctional) escape beat
-    n		Supraventricular escape beat (atrial or nodal)
-    E		Ventricular escape beat
-    /		Paced beat
-    f		Fusion of paced and normal beat
-    Q		Unclassifiable beat
-    ?		Beat not classified during learning
+Debugging script of data.py
 """
 
 from __future__ import division, print_function

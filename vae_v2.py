@@ -1,5 +1,5 @@
 '''
-  Variational Autoencoder (VAE) with the Keras Functional API.
+  VAE-2 script
 '''
 
 import keras
@@ -85,16 +85,14 @@ if config.smote:
 
 Xe = np.expand_dims(X, axis=2)
 Xvale = np.expand_dims(Xval, axis=2)
-#(m, n) = y.shape
-#y = y.reshape((m, 1, n ))
-#(mvl, nvl) = yval.shape
-#yval = yval.reshape((mvl, 1, nvl))
+
 import pandas as pd
 y = np.array(pd.DataFrame(y).idxmax(axis=1))
 yval = np.array(pd.DataFrame(yval).idxmax(axis=1))
 
 target_train = y
 target_test = yval 
+
 # Data & model configuration
 batch_size = config.batch
 no_epochs = config.ae_epochs
@@ -242,7 +240,7 @@ def sample_z(args):
   eps       = K.random_normal(shape=(batch, dim))
   return mu + K.exp(sigma / 2) * eps
 
-# Use reparameterization trick to ....??
+# Use reparameterization trick
 z       = Lambda(sample_z, output_shape=(latent_dim, ), name='z')([mu, sigma])
 
 # Instantiate encoder
@@ -304,37 +302,6 @@ def viz_latent_space(encoder, data):
   plt.xlabel('z - dim 1')
   plt.ylabel('z - dim 2')
   plt.legend(handles = scatter.legend_elements()[0],labels=  classes)
-  plt.show()
-
-def viz_decoded(encoder, decoder, data):
-  num_samples = 15
-  figure = np.zeros((img_width * num_samples, img_height * num_samples, num_channels))
-  grid_x = np.linspace(-4, 4, num_samples)
-  grid_y = np.linspace(-4, 4, num_samples)[::-1]
-  for i, yi in enumerate(grid_y):
-      for j, xi in enumerate(grid_x):
-          z_sample = np.array([[xi, yi]])
-          x_decoded = decoder.predict(z_sample)
-          digit = x_decoded[0].reshape(img_width, img_height, num_channels)
-          figure[i * img_width: (i + 1) * img_width,
-                  j * img_height: (j + 1) * img_height] = digit
-  plt.figure(figsize=(10, 10))
-  start_range = img_width // 2
-  end_range = num_samples * img_width + start_range + 1
-  pixel_range = np.arange(start_range, end_range, img_width)
-  sample_range_x = np.round(grid_x, 1)
-  sample_range_y = np.round(grid_y, 1)
-  plt.xticks(pixel_range, sample_range_x)
-  plt.yticks(pixel_range, sample_range_y)
-  plt.xlabel('z - dim 1')
-  plt.ylabel('z - dim 2')
-  # matplotlib.pyplot.imshow() needs a 2D array, or a 3D array with the third dimension being of shape 3 or 4!
-  # So reshape if necessary
-  fig_shape = np.shape(figure)
-  if fig_shape[2] == 1:
-    figure = figure.reshape((fig_shape[0], fig_shape[1]))
-  # Show image
-  plt.imshow(figure)
   plt.show()
 
 def plot_some_signals(vae, data):

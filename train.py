@@ -74,7 +74,7 @@ def main(config):
         train(config, X, y, Xval, yval)
 
     else:
-        (X,y) = loaddata_nosplit(config.input_size, config.feature)
+        (X,y) = loaddata_nosplit_scaled_std(config.input_size, config.feature)
         train(config, X, y)
 
 

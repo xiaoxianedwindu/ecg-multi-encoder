@@ -1,3 +1,7 @@
+"""
+utility functions
+"""
+
 from __future__ import division, print_function
 from keras.callbacks import LearningRateScheduler
 import matplotlib.pyplot as plt

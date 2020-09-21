@@ -1,5 +1,9 @@
 '''
-  Variational Autoencoder (VAE) with the Keras Functional API.
+  Simple Multi-Encoder Autoencoder for ECG subject-pattern disentanglement
+
+  A subset of the data is processed within this script.
+
+  modified from https://keras.io/examples/generative/vae/
 '''
 
 import keras
@@ -190,22 +194,6 @@ for y in y_test:
   y_test_temp.append(np.array(pd.DataFrame(y).idxmax(axis=1)))
 y_test = y_test_temp
 
-
-#y = np.array(pd.DataFrame(y).idxmax(axis=1))
-#y = np.column_stack((y, subject))
-
-#from sklearn.model_selection import train_test_split
-#Xe, Xvale, y, yval = train_test_split(Xe, y, test_size=0.25, random_state=1)
-
-#(m, n) = y.shape
-#y = y.reshape((m, 1, n ))
-#(mvl, nvl) = yval.shape
-#yval = yval.reshape((mvl, 1, nvl))
-
-#import pandas as pd
-#y = np.array(pd.DataFrame(y).idxmax(axis=1))
-#yval = np.array(pd.DataFrame(yval).idxmax(axis=1))
-
 target_train = y_test
 # Data & model configuration
 batch_size = config.batch
@@ -219,28 +207,6 @@ num_channels = 1
 
 input_train = X_test
 input_shape = (config.input_size, 1)
-
-'''
-target_train = y
-target_test = yval 
-# Data & model configuration
-batch_size = 256
-no_epochs = 1
-validation_split = 0.2
-verbosity = 1
-latent_dim = 2
-num_channels = 1
-
-# Reshape data
-
-input_train = Xe
-input_test = Xvale
-input_shape = (config.input_size, 1)
-
-# Parse numbers as floats
-input_train = input_train.astype('float32')
-input_test = input_test.astype('float32')
-'''
 
 
 # # =================
@@ -256,22 +222,10 @@ cx      = BatchNormalization()(cx)
 cx      = Conv1D(filters=16, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
 cx      = BatchNormalization()(cx)
 cx      = Conv1D(filters=1, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
-#cx      = BatchNormalization()(cx)
-#cx      = Conv1D(filters=1, kernel_size=8, strides=2, padding='same', activation='relu')(cx)
 eo      = BatchNormalization()(cx)
 
-#x       = Flatten()(cx)
-#x       = Dense(20, activation='relu')(x)
-#x       = BatchNormalization()(x)
-#mu      = Dense(latent_dim, name='latent_mu')(x)
-#sigma   = Dense(latent_dim, name='latent_sigma')(x)
-
-# Get Conv2D shape for Conv2DTranspose operation in decoder
 conv_shape = K.int_shape(cx)
 print(conv_shape)
-
-# Use reparameterization trick to ....??
-#z       = Lambda(sample_z, output_shape=(latent_dim, ), name='z')([mu, sigma])
 
 # Instantiate encoder
 encoder = Model(i, eo, name='encoder')
@@ -291,15 +245,8 @@ cx      = BatchNormalization()(cx)
 cx      = Conv1D(filters=16, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
 cx      = BatchNormalization()(cx)
 cx      = Conv1D(filters=1, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
-#cx      = BatchNormalization()(cx)
-#cx      = Conv1D(filters=1, kernel_size=8, strides=2, padding='same', activation='relu')(cx)
 eo_2      = BatchNormalization()(cx)
 
-#x       = Flatten()(cx)
-#x       = Dense(20, activation='relu')(x)
-#x       = BatchNormalization()(x)
-#mu      = Dense(latent_dim, name='latent_mu')(x)
-#sigma   = Dense(latent_dim, name='latent_sigma')(x)
 
 # Get Conv2D shape for Conv2DTranspose operation in decoder
 conv_shape_2 = K.int_shape(cx)
@@ -313,26 +260,14 @@ encoder_2.summary()
 # =================
 
 # Definition
-#d_i   = Input(shape=(latent_dim, ), name='decoder_input')
-#d_i   = Input(shape=(conv_shape[1]*2, conv_shape[2]), name='decoder_input')
 d_i   = Input(shape=(conv_shape[1], conv_shape[2]*2), name='decoder_input')
-#x     = Dense(conv_shape[1] * conv_shape[2], activation='relu')(d_i)
-#x     = BatchNormalization()(x)
-#x     = Reshape((conv_shape[1], conv_shape[2]))(x)
-#x     = Reshape((conv_shape[1], conv_shape[2]))(d_i)
 cx    = UpSampling1D(size=2)(d_i)
-#cx    = UpSampling1D(size=2)(cx)
 cx    = Conv1D(filters=2, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
 cx    = BatchNormalization()(cx)
 cx    = UpSampling1D(size=2)(cx)
 cx    = Conv1D(filters=2, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
 cx    = BatchNormalization()(cx)
 cx    = UpSampling1D(size=2)(cx)
-'''
-cx    = Conv1D(filters=1, kernel_size=16, strides=2, padding='same',  activation='relu', name = 'conv12d2')(cx)
-cx    = BatchNormalization()(cx)
-cx    = UpSampling1D(size=2)(cx)
-'''
 cx    = Conv1D(filters=1, kernel_size=16, strides=2, padding='same',  activation='relu', name = 'conv12d3')(cx)
 cx    = BatchNormalization()(cx)
 cx    = UpSampling1D(size=4)(cx)
@@ -342,18 +277,6 @@ cx    = UpSampling1D(size=4)(cx)
 cx    = Conv1D(filters=num_channels, kernel_size=16, activation='relu', padding='same', name='decoder_output')(cx)
 o     = UpSampling1D(size=2)(cx)
 
-
-'''
-cx    = Conv1DTranspose(d_i, filters=16, kernel_size=3, strides=2, padding='same', activation='relu')#(x)
-cx    = BatchNormalization()(cx)
-cx    = Conv1DTranspose(cx, filters=8, kernel_size=3, strides=2, padding='same',  activation='relu', name = 'conv12d2')#(cx)
-cx    = BatchNormalization()(cx)
-cx    = Conv1DTranspose(cx, filters=8, kernel_size=3, strides=2, padding='same',  activation='relu', name = 'conv12d3')#(cx)
-cx    = BatchNormalization()(cx)
-cx    = Conv1DTranspose(cx, filters=8, kernel_size=3, strides=2, padding='same',  activation='relu', name = 'conv12d4')#(cx)
-cx    = BatchNormalization()(cx)
-o     = Conv1DTranspose(cx, filters=num_channels, kernel_size=3, activation='relu', padding='same', name='decoder_output')#(cx)
-'''
 # Instantiate decoder
 decoder = Model(d_i, o, name='decoder')
 decoder.summary()
@@ -408,15 +331,12 @@ class AE(keras.Model):
 
 
 # Instantiate AE
-#vae_outputs = decoder(tf.concat([encoder(i), encoder_2(i)], 2))
-#vae         = AE(encoder, decoder, name='multi-ae')
 vae         = AE(encoder, encoder_2, decoder, name='multi-ae')
 
 # Compile VAE
 vae.compile(optimizer=keras.optimizers.Adam())
 
 # Train autoencoder
-#vae.fit(input_train, input_train, epochs = no_epochs, batch_size = batch_size, validation_data = (input_test, input_test))
 vae.fit([input_train[0], input_train[1], input_train[2], input_train[3], input_train[4], input_train[5]], epochs = no_epochs, batch_size = batch_size, validation_split = validation_split)
 vae.summary()
 
@@ -426,7 +346,6 @@ vae.summary()
 # Results visualization
 # Credits for original visualization code: https://keras.io/examples/variational_autoencoder_deconv/
 # (François Chollet).
-# Adapted to accomodate this VAE.
 # =================
 def viz_latent_space(encoder, data):
   input_data, target_data = data
@@ -452,38 +371,17 @@ def viz_latent_space(encoder, data):
 def viz_latent_space_pca(encoder, data):
   input_data, target_data = data
   print('pca plot')
-  #print(target_data.shape)
-  #print(target_data.shape[0])
-  #print(target_data)
-  #print(encoder.predict(input_data).shape)#.reshape((32,16))
-  #print(encoder.predict(input_data).reshape(input_data.shape[0], 16).shape)#.reshape((32,16))
 
   from sklearn.decomposition import PCA
   principalComponents = PCA(n_components=2, random_state = 1).fit_transform(encoder.predict(input_data).reshape(input_data.shape[0], 16))
-  #print(principalComponents.shape)
-  #print(principalComponents)  
+
   
   plt.figure(figsize=(8, 10))
-  #m = target_data
-  #m = target_data[:,1]
-  #unique_markers = set(m)  # or yo can use: np.unique(m)
-  '''
-  for um in unique_markers:
-      mask = m == um 
-      um = "$" + um + '$'
-      # mask is now an array of booleans that can be used for indexing  
-      scatter = plt.scatter((principalComponents[:,0])[mask], (principalComponents[:,1])[mask], marker=um, c=target_data[:,0][mask], label=classes)
-  '''
+
   scatter = plt.scatter((principalComponents[:,0]), (principalComponents[:,1]), c=target_data, label=classes)
   plt.legend(handles=scatter.legend_elements()[0], labels=classes)
   plt.title("pca")
   plt.show()
-
-  #plt.figure(figsize=(8, 10))
-  #scatter = plt.scatter(principalComponents[:,0], principalComponents[:,1], c=target_data[:,0].astype('int'), label=classes)
-  #plt.legend(handles=scatter.legend_elements()[0], labels=classes)
-  #plt.title("pca")
-  #plt.show()
 
 def plot_some_signals(vae, data):
     input_data, target_data = data

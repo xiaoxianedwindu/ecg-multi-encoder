@@ -1,5 +1,7 @@
 '''
-  Variational Autoencoder (VAE) with the Keras Functional API.
+  Base for ae_multi-tri.
+  Only has reconstruction loss.
+
 '''
 
 import keras
@@ -39,10 +41,7 @@ classes = ['A', 'E', 'j', 'L', 'N', 'P', 'R', 'V']#['N','V','/','A','F','~']#,'L
 Xe = np.expand_dims(X, axis=2)
 from sklearn.model_selection import train_test_split
 Xe, Xvale, y, yval = train_test_split(Xe, y, test_size=0.25, random_state=1)
-#(m, n) = y.shape
-#y = y.reshape((m, 1, n ))
-#(mvl, nvl) = yval.shape
-#yval = yval.reshape((mvl, 1, nvl))
+
 import pandas as pd
 y = np.array(pd.DataFrame(y).idxmax(axis=1))
 yval = np.array(pd.DataFrame(yval).idxmax(axis=1))
@@ -85,7 +84,6 @@ cx      = Conv1D(filters=1, kernel_size=16, strides=2, padding='same', activatio
 eo      = BatchNormalization()(cx)
 
 
-# Get Conv2D shape for Conv2DTranspose operation in decoder
 conv_shape = K.int_shape(cx)
 print(conv_shape)
 # Define sampling with reparameterization trick
@@ -96,8 +94,6 @@ def sample_z(args):
   eps       = K.random_normal(shape=(batch, dim))
   return mu + K.exp(sigma / 2) * eps
 
-# Use reparameterization trick to ....??
-#z       = Lambda(sample_z, output_shape=(latent_dim, ), name='z')([mu, sigma])
 
 # Instantiate encoder
 encoder = Model(i, eo, name='encoder')
@@ -117,17 +113,8 @@ cx      = BatchNormalization()(cx)
 cx      = Conv1D(filters=16, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
 cx      = BatchNormalization()(cx)
 cx      = Conv1D(filters=1, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
-#cx      = BatchNormalization()(cx)
-#cx      = Conv1D(filters=1, kernel_size=8, strides=2, padding='same', activation='relu')(cx)
 eo_2      = BatchNormalization()(cx)
 
-#x       = Flatten()(cx)
-#x       = Dense(20, activation='relu')(x)
-#x       = BatchNormalization()(x)
-#mu      = Dense(latent_dim, name='latent_mu')(x)
-#sigma   = Dense(latent_dim, name='latent_sigma')(x)
-
-# Get Conv2D shape for Conv2DTranspose operation in decoder
 conv_shape_2 = K.int_shape(cx)
 
 # Instantiate encoder
@@ -139,8 +126,6 @@ encoder_2.summary()
 # =================
 
 # Definition
-#d_i   = Input(shape=(latent_dim, ), name='decoder_input')
-#d_i   = Input(shape=(conv_shape[1]*2, conv_shape[2]), name='decoder_input')
 d_i   = Input(shape=(conv_shape[1], conv_shape[2]*2), name='decoder_input')
 cx    = UpSampling1D(size=2)(d_i)
 cx    = Conv1D(filters=2, kernel_size=16, strides=2, padding='same', activation='relu')(cx)
@@ -167,8 +152,6 @@ decoder.summary()
 from tensorflow import concat
 # Instantiate VAE
 vae_outputs = decoder(concat([encoder(i), encoder_2(i)], 2))
-#vae_outputs = decoder(encoder(i))
-#vae_outputs = decoder(encoder(i)[2])
 vae         = Model(i, vae_outputs, name='multi-ae')
 vae.summary()
 
@@ -191,7 +174,6 @@ vae.fit(input_train, input_train, epochs = no_epochs, batch_size = batch_size, v
 # Results visualization
 # Credits for original visualization code: https://keras.io/examples/variational_autoencoder_deconv/
 # (François Chollet).
-# Adapted to accomodate this VAE.
 # =================
 def viz_latent_space(encoder, data):
   input_data, target_data = data
